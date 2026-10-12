@@ -9,8 +9,8 @@
 <p align="center"><img src="docs/handover.png" alt="Chapter VI, 2014: TJ Holowaychuk passes the torch to Douglas Christopher Wilson" width="820"></p>
 
 ```bash
-cd your-project
-npx github:fixcoreai-cloud/repo.film --open
+npx github:fixcoreai-cloud/repo.film facebook/react --open   # any public GitHub repo
+npx github:fixcoreai-cloud/repo.film --open                  # the repo you're standing in
 ```
 
 No API keys, no account, no server. It reads your local `git log` and writes one self-contained HTML file you can open, share or host anywhere.
@@ -40,7 +40,7 @@ There's no LLM narration and nothing invented. Every scene is computed from the 
 ## Options
 
 ```
-npx github:fixcoreai-cloud/repo.film [path] [options]
+npx github:fixcoreai-cloud/repo.film [path | owner/repo] [options]
 
   -o, --out <file>   where to write the film (default: <repo>.film.html)
   -n, --max <count>  only film the most recent <count> commits

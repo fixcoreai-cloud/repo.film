@@ -3,6 +3,7 @@
 const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { analyze } = require('../src/analyze');
 
 const HELP = `
@@ -19,7 +20,8 @@ const HELP = `
     -h, --help           show this
 
   Examples
-    npx repo.film
+    npx repo.film                      film the repo you're standing in
+    npx repo.film facebook/react       film any public GitHub repo
     npx repo.film ~/code/react --open
 `;
 
@@ -90,8 +92,29 @@ function readCommits(dir, max) {
   });
 }
 
+// `owner/repo` or a GitHub URL that isn't a local folder: fetch the history into a cache first.
+function fetchRemote(target) {
+  if (fs.existsSync(target)) return null;
+  const m = target.match(/github\.com[/:]([\w.-]+)\/([\w.-]+?)(\.git)?\/?$/i) || target.match(/^([\w.-]+)\/([\w.-]+)$/);
+  if (!m) return null;
+  const slug = `${m[1]}/${m[2]}`;
+  const dir = path.join(os.tmpdir(), 'repo.film', slug.replace('/', '__'));
+  if (fs.existsSync(dir)) {
+    console.error(`  ⟳ updating ${slug}`);
+    try { execFileSync('git', ['-C', dir, 'fetch', '--quiet', 'origin', '+HEAD:HEAD'], { stdio: 'ignore' }); } catch {}
+  } else {
+    console.error(`  ⇣ fetching the full history of ${slug} (big projects take a minute)…`);
+    fs.mkdirSync(path.dirname(dir), { recursive: true });
+    try { execFileSync('git', ['clone', '--bare', '--quiet', `https://github.com/${slug}.git`, dir], { stdio: ['ignore', 'ignore', 'pipe'] }); }
+    catch (e) { console.error(`  ✗ couldn't fetch ${slug}. Is it a public GitHub repo?`); process.exit(1); }
+  }
+  return { dir, slug };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const remote = fetchRemote(args.dir);
+  if (remote) { args.dir = remote.dir; if (!args.name) args.name = remote.slug; }
   try { git(args.dir, ['rev-parse', '--git-dir']); }
   catch { console.error(`  ${path.resolve(args.dir)} is not a git repository.`); process.exit(1); }
   try {
@@ -100,6 +123,7 @@ async function main() {
   } catch {}
 
   const info = remoteInfo(args.dir);
+  if (remote) info.url = `https://github.com/${remote.slug}`;
   if (args.name) info.name = args.name;
   const t0 = Date.now();
   console.error(`  🎬 filming ${info.name}`);
