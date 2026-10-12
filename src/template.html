@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__TITLE__ · a repo.film</title>
+<meta name="description" content="The documentary of __TITLE__, told from its git history.">
+<meta property="og:title" content="__TITLE__ · a repo.film">
+<style>
+  :root {
+    --bg: #0a0908; --ink: #f2ede4; --dim: #9a948a; --faint: #4a463f; --line: #24211d;
+    --gold: #e8b860; --red: #e0614f; --blue: #6fb3e8; --green: #8fd18f;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  a { color: inherit; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+  section { padding: 16vh 0; border-top: 1px solid var(--line); }
+  .kicker { font: 600 12px/1 var(--sans); letter-spacing: .32em; text-transform: uppercase; color: var(--gold); margin-bottom: 22px; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; letter-spacing: -.01em; }
+  h2 { font-size: clamp(36px, 6vw, 64px); line-height: 1.05; margin-bottom: 28px; }
+  h3 { font-size: 26px; line-height: 1.2; }
+  .lede { font-family: var(--serif); font-size: clamp(20px, 2.6vw, 26px); line-height: 1.5; color: var(--ink); max-width: 720px; }
+  .dim { color: var(--dim); }
+  .mono { font-family: var(--mono); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* title card */
+  .title { min-height: 100vh; display: grid; place-items: center; text-align: center; border: 0; padding: 10vh 0; position: relative; }
+  .title .presents { font: 600 12px/1 var(--sans); letter-spacing: .5em; text-transform: uppercase; color: var(--dim); margin-bottom: 40px; }
+  .title h1 { line-height: .95; letter-spacing: -.03em; overflow-wrap: anywhere; }
+  .title .owner { font-family: var(--serif); font-size: clamp(20px, 3vw, 30px); color: var(--dim); margin-bottom: 8px; }
+  .title .tag { font-family: var(--serif); font-style: italic; font-size: clamp(18px, 2.4vw, 24px); color: var(--dim); margin-top: 28px; }
+  .title .begin { margin-top: 48px; display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn { font: 600 14px/1 var(--sans); letter-spacing: .08em; color: var(--ink); background: transparent; border: 1px solid var(--faint);
+    border-radius: 999px; padding: 14px 22px; cursor: pointer; text-decoration: none; }
+  .btn:hover { border-color: var(--gold); color: var(--gold); }
+  .btn.gold { background: var(--gold); color: #1a1408; border-color: var(--gold); }
+  .btn.gold:hover { background: #f3cb80; color: #1a1408; }
+  .scroll-hint { position: absolute; bottom: 28px; left: 0; right: 0; text-align: center; color: var(--faint); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; }
+
+  /* reveal */
+  .r { opacity: 0; transform: translateY(24px); transition: opacity 1s ease, transform 1s ease; }
+  .r.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .r { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+  /* commit cards */
+  .commit { display: block; text-decoration: none; border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 6px;
+    padding: 16px 18px; margin: 18px 0; background: #11100e; transition: border-color .2s; }
+  a.commit:hover { border-color: var(--faint); border-left-color: var(--gold); }
+  .commit .msg { font-family: var(--mono); font-size: 15px; color: var(--ink); word-break: break-word; }
+  .commit .by { font-size: 13px; color: var(--dim); margin-top: 6px; }
+  .commit .by .sha { font-family: var(--mono); color: var(--gold); }
+  .commit.red { border-left-color: var(--red); }
+  .commit.blue { border-left-color: var(--blue); }
+  .commit.green { border-left-color: var(--green); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 28px; margin: 40px 0; }
+  .stat .v { font-family: var(--serif); font-size: clamp(34px, 5vw, 52px); line-height: 1; }
+  .stat .k { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin-top: 10px; }
+
+  .files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+  .files span { font: 12px/1 var(--mono); color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; }
+
+  .founders { list-style: none; padding: 0; margin: 30px 0 0; }
+  .founders li { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); font-family: var(--serif); font-size: 22px; }
+  .founders li span { font: 14px var(--sans); color: var(--dim); white-space: nowrap; }
+
+  /* timeline */
+  .timeline { width: 100%; height: 160px; display: block; margin: 30px 0 8px; }
+  .axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--dim); font-family: var(--mono); }
+
+  /* eras */
+  .era { padding: 12vh 0; border-top: 1px solid var(--line); }
+  .era .roman { font-family: var(--serif); font-size: 15px; letter-spacing: .3em; color: var(--gold); text-transform: uppercase; }
+  .era h2 { margin: 12px 0 6px; }
+  .era .mood { font-family: var(--serif); font-style: italic; color: var(--dim); font-size: 24px; margin-bottom: 26px; }
+  .era .facts { display: flex; flex-wrap: wrap; gap: 10px 28px; color: var(--dim); font-size: 15px; margin-bottom: 18px; }
+  .era .facts b { color: var(--ink); font-weight: 600; }
+  .handover { margin: 26px 0; padding: 20px 22px; border: 1px solid var(--gold); border-radius: 6px; font-family: var(--serif); font-size: 22px; background: rgba(232,184,96,.06); }
+  .handover small { display: block; font: 600 11px/1 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font: 13px/1 var(--mono); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; }
+  .bar { height: 6px; background: var(--line); border-radius: 6px; overflow: hidden; margin-top: 8px; }
+  .bar i { display: block; height: 100%; background: var(--gold); }
+
+  /* cast */
+  .cast { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 36px; }
+  .actor { border: 1px solid var(--line); border-radius: 8px; padding: 20px; background: #11100e; }
+  .actor .name { font-family: var(--serif); font-size: 22px; line-height: 1.2; word-break: break-word; }
+  .actor .role { color: var(--gold); font-size: 13px; margin: 4px 0 14px; font-family: var(--mono); }
+  .actor dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+  .actor dt { color: var(--dim); }
+  .actor dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+  .awards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 40px; }
+  .award { text-align: center; padding: 26px 18px; border: 1px solid var(--line); border-radius: 8px; }
+  .award .t { font: 600 11px/1 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--gold); }
+  .award .n { font-family: var(--serif); font-size: 24px; margin: 14px 0 8px; }
+  .award .l { color: var(--dim); font-size: 14px; }
+
+  /* heatmap */
+  .heat { display: grid; grid-template-columns: 36px repeat(24, minmax(0, 1fr)); gap: 3px; margin-top: 30px; font-size: 11px; color: var(--dim); }
+  .heat .c { aspect-ratio: 1; border-radius: 3px; background: var(--gold); }
+  .heat .lbl { display: flex; align-items: center; }
+
+  .words { display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: baseline; margin-top: 30px; font-family: var(--serif); }
+  .words span { line-height: 1.1; }
+
+  /* credits */
+  .credits { text-align: center; padding: 18vh 0 10vh; }
+  .roll-window { height: 60vh; overflow: hidden; position: relative; margin: 40px auto 0; max-width: 520px;
+    -webkit-mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent); mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent); }
+  .roll { animation: roll var(--dur, 60s) linear infinite; padding-top: 60vh; }
+  .roll div { font-family: var(--serif); font-size: 20px; padding: 6px 0; }
+  .roll .head { font: 600 11px/1 var(--sans); letter-spacing: .35em; text-transform: uppercase; color: var(--gold); padding: 34px 0 14px; }
+  @keyframes roll { to { transform: translateY(-100%); } }
+  @media (prefers-reduced-motion: reduce) { .roll { animation: none; padding-top: 0; } .roll-window { height: auto; -webkit-mask-image: none; mask-image: none; } }
+  .fin { font-family: var(--serif); font-size: 40px; margin-top: 50px; letter-spacing: .2em; }
+  .made { margin-top: 30px; font-size: 13px; color: var(--dim); }
+
+  /* soundtrack */
+  .sound { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: flex; align-items: center; gap: 10px;
+    background: rgba(17,16,14,.92); border: 1px solid var(--line); border-radius: 999px; padding: 8px 8px 8px 16px;
+    font-size: 12px; color: var(--dim); backdrop-filter: blur(8px); max-width: calc(100vw - 36px); }
+  .sound .now { font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+  .sound button { width: 36px; height: 36px; flex: none; border-radius: 50%; border: 0; background: var(--gold); color: #1a1408; font-size: 14px; cursor: pointer; }
+  .progress { position: fixed; top: 0; left: 0; height: 2px; background: var(--gold); z-index: 60; width: 0; }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .wrap { padding: 0 16px; }
+    section, .era { padding: 11vh 0; }
+    .heat { grid-template-columns: 28px repeat(24, minmax(0, 1fr)); gap: 1px; }
+    .heat .hr { visibility: hidden; }
+    .sound .now { max-width: 140px; }
+    .founders li { font-size: 18px; flex-direction: column; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<main id="film"></main>
+<div class="sound" id="sound"><span class="now" id="now">soundtrack by repo.fm</span><button id="soundBtn" aria-label="Play soundtrack">▶</button></div>
+
+<script>
+'use strict';
+const STORY = /*__STORY__*/null;
+
+// ---------- helpers ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const n = x => Number(x).toLocaleString('en-US');
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const date = t => { const d = new Date(t); return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`; };
+const year = t => new Date(t).getUTCFullYear();
+const ROMAN = i => { const r = [['M',1000],['CM',900],['D',500],['CD',400],['C',100],['XC',90],['L',50],['XL',40],['X',10],['IX',9],['V',5],['IV',4],['I',1]]; let s = ''; for (const [k, v] of r) while (i >= v) { s += k; i -= v; } return s; };
+const plural = (x, one, many) => `${n(x)} ${x === 1 ? one : (many || one + 's')}`;
+const link = sha => STORY.meta.url ? `${STORY.meta.url}/commit/${sha}` : null;
+function commitCard(c, tone = '') {
+  if (!c) return '';
+  const href = link(c.sha);
+  const tag = href ? `a href="${href}" target="_blank" rel="noopener"` : 'div';
+  const lines = (c.ins || c.del) ? ` · <span style="color:var(--green)">+${n(c.ins)}</span> <span style="color:var(--red)">−${n(c.del)}</span>` : '';
+  return `<${tag} class="commit ${tone}"><div class="msg">${esc(c.subject)}</div>
+    <div class="by"><span class="sha">${c.short}</span> · ${esc(c.author)} · ${date(c.t)}${lines}</div></${href ? 'a' : 'div'}>`;
+}
+
+// ---------- the film ----------
+function render(S) {
+  const T = S.totals, out = [];
+  const name = S.meta.name;
+  const short = name.includes('/') ? name.split('/').slice(1).join('/') : name;
+
+  out.push(`<section class="title"><div class="wrap">
+    <div class="presents r">a repo.film</div>
+    ${name.includes('/') ? `<div class="owner r">${esc(name.split('/')[0])} /</div>` : ''}
+    <h1 class="r" style="font-size:min(120px, ${Math.max(5, Math.floor(150 / Math.max(4, short.length)))}vw)">${esc(short)}</h1>
+    <div class="tag r">${n(T.years)} years. ${plural(T.commits, 'commit')}. ${plural(T.people, 'person', 'people')}.</div>
+    <div class="begin r"><button class="btn gold" id="beginSound">▶ Begin with sound</button><a class="btn" href="#open">Begin in silence</a></div>
+  </div><div class="scroll-hint">scroll</div></section>`);
+
+  // cold open
+  const f = S.first;
+  const fd = new Date(f.t);
+  out.push(`<section id="open"><div class="wrap">
+    <div class="kicker r">Cold open</div>
+    <h2 class="r">It started on ${MONTHS[fd.getUTCMonth()]} ${fd.getUTCDate()}, ${fd.getUTCFullYear()}.</h2>
+    <p class="lede r">${esc(f.author)} made the first commit. It touched ${plural(f.fileCount, 'file')}. Nobody knew what it would become.</p>
+    <div class="r">${commitCard(f)}</div>
+    <div class="files r">${f.files.map(p => `<span>${esc(p)}</span>`).join('')}${f.fileCount > f.files.length ? `<span>+${f.fileCount - f.files.length} more</span>` : ''}</div>
+  </div></section>`);
+
+  // founders
+  if (S.founders.length > 1) {
+    out.push(`<section><div class="wrap">
+      <div class="kicker r">The first ones</div>
+      <h2 class="r">Before anyone was watching.</h2>
+      ${S.stranger ? `<p class="lede r">For ${plural(S.stranger.daysAfter, 'day')}, it was a party of one. Then ${esc(S.stranger.name)} showed up.</p>` : ''}
+      <ul class="founders">${S.founders.map(p => `<li class="r">${esc(p.name)}<span>arrived ${date(p.commit.t)}</span></li>`).join('')}</ul>
+    </div></section>`);
+  }
+
+  // the shape of it
+  const months = S.months;
+  if (months.length > 2) {
+    const max = Math.max(...months.map(m => m.c));
+    const w = 1000, h = 160, bw = w / months.length;
+    const bars = months.map((m, i) => { const bh = Math.max(1, m.c / max * (h - 10)); return `<rect x="${(i * bw).toFixed(2)}" y="${(h - bh).toFixed(2)}" width="${Math.max(1, bw - 1).toFixed(2)}" height="${bh.toFixed(2)}" fill="var(--gold)" opacity="${(.35 + .65 * m.c / max).toFixed(2)}"/>`; }).join('');
+    const busiest = months.reduce((a, b) => (b.c > a.c ? b : a));
+    const [by, bm] = busiest.m.split('-');
+    out.push(`<section><div class="wrap">
+      <div class="kicker r">The shape of it</div>
+      <h2 class="r">${plural(T.commits, 'commit')}, one month at a time.</h2>
+      <p class="lede r">The busiest month was ${MONTHS[+bm - 1]} ${by}, with ${plural(busiest.c, 'commit')}. Over the whole run, ${n(T.ins)} lines were written and ${n(T.del)} were taken away again.</p>
+      <svg class="timeline r" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Commits per month">${bars}</svg>
+      <div class="axis r"><span>${months[0].m}</span><span>${months[months.length - 1].m}</span></div>
+    </div></section>`);
+  }
+
+  // eras
+  const maxEra = Math.max(...S.eras.map(e => e.commits));
+  S.eras.forEach((e, i) => {
+    const lead = e.lead.map(l => `<span class="chip">${esc(l.name)} · ${n(l.n)}</span>`).join('');
+    out.push(`<div class="era"><div class="wrap">
+      <div class="roman r">Chapter ${ROMAN(i + 1)}</div>
+      <h2 class="r">${esc(e.key)}</h2>
+      ${e.mood ? `<div class="mood r">${esc(e.mood)}</div>` : ''}
+      <div class="facts r"><span><b>${n(e.commits)}</b> commits</span><span><b>${n(e.newcomers)}</b> newcomers</span>${e.releases ? `<span><b>${n(e.releases)}</b> releases</span>` : ''}${e.fixShare > .02 ? `<span><b>${Math.round(e.fixShare * 100)}%</b> fixes</span>` : ''}</div>
+      <div class="bar r"><i style="width:${(e.commits / maxEra * 100).toFixed(1)}%"></i></div>
+      ${e.handover ? `<div class="handover r"><small>The handover</small>${esc(e.handover.from)} passes the torch to ${esc(e.handover.to)}.</div>` : ''}
+      <p class="r dim" style="margin-top:26px">Carrying the most weight</p><div class="chips r">${lead}</div>
+      ${e.areas.length ? `<p class="r dim" style="margin-top:20px">Where the work happened</p><div class="chips r">${e.areas.map(a => `<span class="chip">${esc(a)}</span>`).join('')}</div>` : ''}
+      <p class="r dim" style="margin-top:26px">The biggest change of the chapter</p><div class="r">${commitCard(e.headline)}</div>
+      ${e.firstRelease && e.releases > 0 ? `<p class="r dim">${e.releases === 1 ? 'The release' : 'First release of the chapter'}</p><div class="r">${commitCard(e.firstRelease, 'green')}</div>` : ''}
+    </div></div>`);
+  });
+
+  // darkest week
+  if (S.darkest) {
+    const d = S.darkest;
+    out.push(`<section><div class="wrap">
+      <div class="kicker r" style="color:var(--red)">The darkest week</div>
+      <h2 class="r">The week of ${date(d.start)}.</h2>
+      <p class="lede r">${plural(d.total, 'commit')} that week. ${d.reverts ? `${plural(d.reverts, 'revert')}. ` : ''}${plural(d.fixes, 'fix', 'fixes')}. Something was on fire.</p>
+      ${d.scenes.map(c => `<div class="r">${commitCard(c, 'red')}</div>`).join('')}
+    </div></section>`);
+  }
+
+  // rewrite + bang
+  if (S.rewrite && S.rewrite.del > 0) {
+    const same = S.bang && S.bang.sha === S.rewrite.sha;
+    out.push(`<section><div class="wrap">
+      <div class="kicker r">The great rewrite</div>
+      <h2 class="r">${n(S.rewrite.del)} lines, gone in one commit.</h2>
+      <p class="lede r">${esc(S.rewrite.author)} made the biggest single deletion in the project's history.</p>
+      <div class="r">${commitCard(S.rewrite, 'red')}</div>
+      ${S.bang && !same && S.bang.ins > 0 ? `<div class="kicker r" style="margin-top:12vh">The big bang</div>
+      <h2 class="r">${n(S.bang.ins)} lines, arriving at once.</h2>
+      <div class="r">${commitCard(S.bang, 'green')}</div>` : ''}
+    </div></section>`);
+  }
+
+  // silence
+  if (S.silence && S.silence.days >= 7) {
+    out.push(`<section><div class="wrap">
+      <div class="kicker r">The longest silence</div>
+      <h2 class="r">${plural(S.silence.days, 'day')} without a single commit.</h2>
+      <p class="lede r">The last word before the quiet:</p>
+      <div class="r">${commitCard(S.silence.before, 'blue')}</div>
+      <p class="lede r" style="margin-top:6vh">And the one that broke it:</p>
+      <div class="r">${commitCard(S.silence.after, 'blue')}</div>
+    </div></section>`);
+  }
+
+  // cast
+  const hr = h => `${(h % 12) || 12}${h < 12 ? 'am' : 'pm'}`;
+  out.push(`<section><div class="wrap">
+    <div class="kicker r">The cast</div>
+    <h2 class="r">${plural(T.people, 'person', 'people')} wrote this story.</h2>
+    <p class="lede r">These are the ones who wrote the most of it.</p>
+    <div class="cast">${S.cast.map((a, i) => `<div class="actor r">
+      <div class="name">${esc(a.name)}</div>
+      <div class="role">${i === 0 ? 'lead · ' : ''}${esc(a.signature)}</div>
+      <dl><dt>commits</dt><dd>${n(a.commits)}</dd>
+      <dt>lines</dt><dd><span style="color:var(--green)">+${n(a.ins)}</span> <span style="color:var(--red)">−${n(a.del)}</span></dd>
+      <dt>active</dt><dd>${year(a.first)}${year(a.last) !== year(a.first) ? '–' + year(a.last) : ''}</dd>
+      <dt>favourite hour</dt><dd>${hr(a.peakHour)}</dd></dl></div>`).join('')}</div>
+    ${S.awards.length ? `<div class="awards">${S.awards.map(a => `<div class="award r"><div class="t">${esc(a.title)}</div><div class="n">${esc(a.name)}</div><div class="l">${esc(a.line)}</div></div>`).join('')}</div>` : ''}
+  </div></section>`);
+
+  // heat
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], order = [1,2,3,4,5,6,0];
+  const hmax = Math.max(1, ...S.heat.flat());
+  const cells = order.map((d, i) => `<div class="lbl">${days[i]}</div>` + S.heat[d].map(v => `<div class="c" style="opacity:${(0.06 + 0.94 * Math.sqrt(v / hmax)).toFixed(2)}" title="${days[i]} ${v} commits"></div>`).join('')).join('');
+  const nightShare = S.heat.reduce((a, row) => a + row.slice(0, 5).reduce((x, y) => x + y, 0), 0) / T.commits;
+  const weekend = (S.heat[0].concat(S.heat[6])).reduce((a, b) => a + b, 0) / T.commits;
+  out.push(`<section><div class="wrap">
+    <div class="kicker r">When they worked</div>
+    <h2 class="r">The hours behind the code.</h2>
+    <p class="lede r">${Math.round(nightShare * 100)}% of commits happened between midnight and 5am, in the author's own time zone. ${Math.round(weekend * 100)}% happened on weekends.</p>
+    <div class="heat r">${cells}<div></div>${[...Array(24)].map((_, h) => `<div class="hr" style="text-align:center">${h % 6 === 0 ? h : ''}</div>`).join('')}</div>
+  </div></section>`);
+
+  // words
+  if (S.words.length) {
+    const wmax = S.words[0].n;
+    out.push(`<section><div class="wrap">
+      <div class="kicker r">What they kept saying</div>
+      <h2 class="r">The word was “${esc(S.words[0].w)}”.</h2>
+      <div class="words r">${S.words.map((w, i) => `<span style="font-size:${(16 + 44 * Math.sqrt(w.n / wmax)).toFixed(0)}px;color:${i === 0 ? 'var(--gold)' : 'var(--ink)'};opacity:${(.45 + .55 * w.n / wmax).toFixed(2)}" title="${n(w.n)} times">${esc(w.w)}</span>`).join('')}</div>
+    </div></section>`);
+  }
+
+  // now
+  out.push(`<section><div class="wrap">
+    <div class="kicker r">Today</div>
+    <h2 class="r">The story isn't over.</h2>
+    <div class="stats r">
+      <div class="stat"><div class="v num">${n(T.commits)}</div><div class="k">commits</div></div>
+      <div class="stat"><div class="v num">${n(T.people)}</div><div class="k">people</div></div>
+      <div class="stat"><div class="v num">${n(T.years)}</div><div class="k">years</div></div>
+      <div class="stat"><div class="v num">${n(T.files)}</div><div class="k">files touched</div></div>
+    </div>
+    <p class="lede r">${S.now.activePeople ? `In the last 90 days, ${plural(S.now.activePeople, 'person', 'people')} kept it moving.` : 'It has been quiet for a while now.'} The latest scene:</p>
+    <div class="r">${commitCard(S.now.last)}</div>
+  </div></section>`);
+
+  // credits
+  const dur = Math.max(30, Math.min(240, S.credits.length * 0.7));
+  out.push(`<section class="credits"><div class="wrap">
+    <div class="kicker r">Credits</div>
+    <h2 class="r">${esc(name)}</h2>
+    <div class="roll-window"><div class="roll" style="--dur:${dur}s">
+      <div class="head">Starring</div>${S.cast.slice(0, 5).map(a => `<div>${esc(a.name)}</div>`).join('')}
+      <div class="head">With</div>${S.credits.slice(5).map(c => `<div>${esc(c)}</div>`).join('')}
+      <div class="head">Soundtrack</div><div>the last ${n(S.soundtrack.length)} commits, played by repo.fm</div>
+      <div class="head">Filmed on location</div><div>${S.meta.url ? `<a href="${S.meta.url}">${esc(S.meta.url.replace('https://', ''))}</a>` : esc(name)}</div>
+    </div></div>
+    <div class="fin r">FIN</div>
+    <div class="made r">made with <a href="https://github.com/fixcoreai-cloud/repo.film">repo.film</a> · every fact links to a real commit</div>
+  </div></section>`);
+
+  $('#film').innerHTML = out.join('');
+}
+
+// ---------- reveal on scroll ----------
+function reveal() {
+  const els = document.querySelectorAll('.r');
+  if (!('IntersectionObserver' in window)) { els.forEach(e => e.classList.add('in')); return; }
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+  els.forEach(e => io.observe(e));
+}
+addEventListener('scroll', () => {
+  const h = document.documentElement;
+  $('#progress').style.width = (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight) * 100) + '%';
+}, { passive: true });
+
+// ---------- soundtrack (repo.fm engine) ----------
+const fnv = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const KINDS = [['merge',/^(merge|merged)\b/],['revert',/^(revert|rollback|undo)\b/],['feat',/^(feat|feature|add|adds|added|implement|introduce|new|support|create|initial)\b/],['fix',/^(fix|fixes|fixed|bug|bugfix|patch|hotfix|resolve|correct)\b/],['perf',/^(perf|optimi[sz]e|speed|faster)\b/],['docs',/^(docs?|readme|typo|comment|changelog)\b/],['test',/^(tests?|spec|ci|e2e)\b/],['refactor',/^(refactor|clean|cleanup|rename|move|remove|delete|drop|chore|bump|update|upgrade|deps?|build|style|release|version)\b/]];
+function kindOf(msg) { const first = msg.toLowerCase(); const t = first.match(/^(\w+)(\([^)]*\))?!?:/); const w = t ? t[1] : first.replace(/^[^a-z]+/, ''); for (const [k, re] of KINDS) if (re.test(w)) return k; return 'keys'; }
+function compose(name, commits) {
+  const seed = fnv(name.toLowerCase());
+  const kinds = commits.map(c => kindOf(c.msg || ''));
+  const minor = kinds.filter(k => k === 'fix' || k === 'revert').length / kinds.length > 0.3;
+  const root = 48 + (seed % 12);
+  const scale = minor ? [0, 3, 5, 7, 10] : [0, 2, 4, 7, 9];
+  const gaps = commits.slice(1).map((c, i) => Math.abs(c.t - commits[i].t)).sort((a, b) => a - b);
+  const median = gaps[Math.floor(gaps.length / 2)] || 1;
+  const perDay = commits.length / Math.max(1, Math.abs(commits[commits.length - 1].t - commits[0].t) / 864e5);
+  const bpm = Math.round(clamp(78 + Math.log2(1 + perDay) * 9, 78, 138));
+  const authors = []; const notes = []; let step = 0;
+  commits.forEach((c, i) => {
+    if (!authors.includes(c.author)) authors.push(c.author);
+    const idx = authors.indexOf(c.author);
+    if (i > 0) { const g = Math.abs(c.t - commits[i - 1].t); step += 1 + (g > median * 6 ? 2 : g > median * 1.8 ? 1 : 0); }
+    const h = fnv(c.sha), kind = kinds[i];
+    const reg = { refactor: -12, revert: -12, merge: 0, keys: 12, fix: 12, feat: 12, perf: 24, docs: 24, test: 24 }[kind];
+    notes.push({ step, kind, c, midi: root + reg + scale[h % 5] + ((h >> 8) % 2) * 12 * (kind === 'keys' || kind === 'feat' ? 1 : 0),
+      len: clamp((c.msg || '').length / 24, .5, 4), pan: ((idx * .618) % 1) * 1.4 - .7, vel: .75 + ((h >> 12) % 25) / 100 });
+  });
+  return { notes, minor, stepSec: 60 / bpm / 2, steps: step + 8 };
+}
+const noiseCache = new WeakMap();
+function noise(ctx) { if (noiseCache.has(ctx)) return noiseCache.get(ctx); const b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; noiseCache.set(ctx, b); return b; }
+function env(g, t, a, p, d) { g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(p, .0002), t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + d); }
+function tone(ctx, type, f, t, dur, dest, det = 0) { const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); o.detune.value = det; o.connect(dest); o.start(t); o.stop(t + dur + .05); return o; }
+function voice(ctx, dest, t, p, a, d) { const g = ctx.createGain(); env(g, t, a, p, d); g.connect(dest); return g; }
+const INST = {
+  feat(c, o, t, m, d, v) { tone(c, 'sine', mtof(m), t, 2.2, voice(c, o, t, .22 * v, .004, 2)); tone(c, 'sine', mtof(m) * 2.76, t, .8, voice(c, o, t, .06 * v, .002, .7)); },
+  fix(c, o, t, m, d, v) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 4; f.frequency.setValueAtTime(4200, t); f.frequency.exponentialRampToValueAtTime(380, t + .35); f.connect(voice(c, o, t, .28 * v, .003, .45)); tone(c, 'sawtooth', mtof(m), t, .5, f); },
+  refactor(c, o, t, m, d, v) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 520; f.connect(voice(c, o, t, .32 * v, .01, d * .9 + .1)); tone(c, 'sawtooth', mtof(m), t, d + .2, f); tone(c, 'sine', mtof(m) / 2, t, d + .2, voice(c, o, t, .25 * v, .01, d * .9 + .1)); },
+  docs(c, o, t, m, d, v) { const g = voice(c, o, t, .06 * v, .35, d + 1.4); tone(c, 'sine', mtof(m), t, d + 2, g, -7); tone(c, 'sine', mtof(m), t, d + 2, g, 7); },
+  test(c, o, t, m, d, v) { const s = c.createBufferSource(); s.buffer = noise(c); const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 6500; s.connect(f); f.connect(voice(c, o, t, .14 * v, .001, .05)); s.start(t); s.stop(t + .1); tone(c, 'sine', mtof(m), t, .2, voice(c, o, t, .05 * v, .002, .15)); },
+  keys(c, o, t, m, d, v) { tone(c, 'triangle', mtof(m), t, 1.4 + d * .3, voice(c, o, t, .17 * v, .006, .7 + d * .3)); tone(c, 'sine', mtof(m) * 2, t, .5, voice(c, o, t, .05 * v, .003, .4)); },
+  perf(c, o, t, m, d, v) { [0, 7, 12, 19].forEach((iv, i) => INST.feat(c, o, t + i * .055, m + iv, .2, v * .55)); },
+  merge(c, o, t, m, d, v, song) { [0, song.minor ? 3 : 4, 7, 12].forEach(iv => INST.keys(c, o, t, m + iv, d + .6, v * .6)); INST.refactor(c, o, t, m - 12, d, v * .7); },
+  revert(c, o, t, m, d, v) { const g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.18 * v, t + .45); g.gain.exponentialRampToValueAtTime(.0001, t + .6); g.connect(o); const x = tone(c, 'sawtooth', mtof(m + 12), t, .65, g); x.frequency.exponentialRampToValueAtTime(mtof(m), t + .6); },
+  kick(c, o, t, v) { const x = tone(c, 'sine', 120, t, .35, voice(c, o, t, .42 * v, .002, .32)); x.frequency.exponentialRampToValueAtTime(42, t + .25); },
+  hat(c, o, t) { const s = c.createBufferSource(); s.buffer = noise(c); const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 8000; s.connect(f); f.connect(voice(c, o, t, .045, .001, .04)); s.start(t); s.stop(t + .06); },
+};
+function bus(ctx) {
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
+  const out = ctx.createGain(); out.gain.value = .8; comp.connect(out); out.connect(ctx.destination);
+  const verb = ctx.createConvolver(), len = ctx.sampleRate * 2.6, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+  verb.buffer = ir; verb.connect(comp);
+  const send = ctx.createGain(); send.gain.value = .32; send.connect(verb);
+  const input = ctx.createGain(); input.connect(comp); input.connect(send); return input;
+}
+let player = null;
+function playSoundtrack() {
+  if (player) return stopSoundtrack();
+  const song = compose(STORY.meta.name, STORY.soundtrack);
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const b = bus(ctx), t0 = ctx.currentTime + .15;
+  for (let s = 0; s <= song.steps; s++) { const t = t0 + s * song.stepSec; if (s % 4 === 0) INST.kick(ctx, b, t, s % 8 === 0 ? 1 : .7); if (s % 2) INST.hat(ctx, b, t); }
+  for (const nt of song.notes) { const p = ctx.createStereoPanner(); p.pan.value = nt.pan; p.connect(b); INST[nt.kind](ctx, p, t0 + nt.step * song.stepSec, nt.midi, nt.len * song.stepSec, nt.vel, song); }
+  let i = 0;
+  const tick = setInterval(() => {
+    const pos = (ctx.currentTime - t0) / song.stepSec;
+    while (i < song.notes.length && song.notes[i].step <= pos) { const c = song.notes[i].c; $('#now').textContent = `♪ ${c.sha.slice(0, 7)} ${c.msg}`; i++; }
+    if (pos > song.steps + 4) stopSoundtrack();
+  }, 60);
+  player = { ctx, tick };
+  $('#soundBtn').textContent = '■'; $('#soundBtn').setAttribute('aria-label', 'Stop soundtrack');
+}
+function stopSoundtrack() {
+  if (!player) return;
+  clearInterval(player.tick); player.ctx.close(); player = null;
+  $('#soundBtn').textContent = '▶'; $('#soundBtn').setAttribute('aria-label', 'Play soundtrack');
+  $('#now').textContent = 'soundtrack by repo.fm';
+}
+
+// ---------- go ----------
+render(STORY);
+reveal();
+$('#soundBtn').addEventListener('click', playSoundtrack);
+$('#beginSound').addEventListener('click', () => { if (!player) playSoundtrack(); $('#open').scrollIntoView(); });
+window.repofilm = { story: STORY, compose };
+</script>
+</body>
+</html>

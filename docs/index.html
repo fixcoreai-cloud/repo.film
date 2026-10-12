@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>repo.film · every repository is a documentary</title>
+<meta name="description" content="One command turns any git history into a cinematic, scrollable film with a soundtrack played from its commits.">
+<style>
+:root{--bg:#0a0908;--ink:#f2ede4;--dim:#9a948a;--line:#24211d;--gold:#e8b860;--serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--sans)}
+.wrap{max-width:880px;margin:0 auto;padding:12vh 24px}
+.k{font:600 12px/1 var(--sans);letter-spacing:.5em;text-transform:uppercase;color:var(--dim)}
+h1{font:400 clamp(56px,12vw,128px)/.95 var(--serif);letter-spacing:-.03em;margin:28px 0 20px}
+p.l{font:italic clamp(20px,2.6vw,26px)/1.5 var(--serif);color:var(--dim);max-width:640px}
+pre{background:#11100e;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:6px;padding:18px;overflow-x:auto;font:15px/1.5 var(--mono);margin:36px 0}
+.films{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:20px}
+.films a{display:block;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:22px;background:#11100e}
+.films a:hover{border-color:var(--gold)}.films b{font:400 30px var(--serif);display:block}.films span{color:var(--dim);font-size:14px}
+img{width:100%;border-radius:8px;border:1px solid var(--line);margin-top:50px}
+a.g{color:var(--gold)}footer{color:var(--dim);font-size:14px;margin-top:60px}
+@media(max-width:640px){.wrap{padding:10vh 16px}}
+</style></head><body><div class="wrap">
+<div class="k">repo.film</div>
+<h1>Every repository is a documentary.</h1>
+<p class="l">One command turns any git history into a cinematic film you can scroll: the founding, the handovers, the darkest week, the longest silence, the cast, the credits. The soundtrack is played from its commits.</p>
+<pre>cd your-project
+npx github:fixcoreai-cloud/repo.film --open</pre>
+<div class="k" style="margin-top:50px">Now showing</div>
+<div class="films">
+<a href="express.html"><b>express</b><span>17.3 years · 6,181 commits · 384 people</span></a>
+<a href="vite.html"><b>vite</b><span>6.5 years · 9,774 commits · 1,327 people</span></a>
+</div>
+<img src="handover.png" alt="Chapter VI, 2014: the handover">
+<footer>Nothing invented: every scene is computed from git, and every commit links to the real thing. · <a class="g" href="https://github.com/fixcoreai-cloud/repo.film">GitHub</a> · soundtrack by <a class="g" href="https://github.com/fixcoreai-cloud/repo.fm">repo.fm</a></footer>
+</div></body></html>

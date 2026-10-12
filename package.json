@@ -1,0 +1,12 @@
+{
+  "name": "repo.film",
+  "version": "0.1.0",
+  "description": "Every repository is a documentary. Turn any git history into a cinematic, scrollable film, with a soundtrack made from its commits.",
+  "bin": { "repo.film": "bin/repofilm.js" },
+  "files": ["bin", "src"],
+  "engines": { "node": ">=18" },
+  "keywords": ["git", "history", "documentary", "visualization", "storytelling", "cli", "commits", "repository"],
+  "repository": { "type": "git", "url": "git+https://github.com/fixcoreai-cloud/repo.film.git" },
+  "homepage": "https://fixcoreai-cloud.github.io/repo.film/",
+  "license": "MIT"
+}
